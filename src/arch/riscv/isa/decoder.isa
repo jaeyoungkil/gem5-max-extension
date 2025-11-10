@@ -4565,6 +4565,23 @@ decode QUADRANT default Unknown::unknown() {
                     0x2b: vnmsub_vv({{
                         Vd_vi[i] = -(Vs3_vi[i] * Vs1_vi[i]) + Vs2_vi[i];
                     }}, OPMVV, SimdMultAccOp);
+                    0x2c: vmatmul_vv({{
+                        // Matrix Acceleration Extension (MAX)
+                        // 4x4 matrix multiply: Vd = Vs1 × Vs2
+                        // Matrices stored in row-major order
+                        const int matSize = 4;
+                        int row = i / matSize;
+                        int col = i % matSize;
+
+                        if (i < matSize * matSize) {
+                            int32_t result = 0;
+                            for (int k = 0; k < matSize; k++) {
+                                result += Vs1_vi[row * matSize + k] *
+                                          Vs2_vi[k * matSize + col];
+                            }
+                            Vd_vi[i] = result;
+                        }
+                    }}, OPMVV, SimdMatMultAccOp);
                     0x2d: vmacc_vv({{
                         Vd_vi[i] = Vs2_vi[i] * Vs1_vi[i] + Vs3_vi[i];
                     }}, OPMVV, SimdMultAccOp);
