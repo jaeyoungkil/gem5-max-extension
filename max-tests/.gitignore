@@ -1,0 +1,7 @@
+# Compiled binaries
+test_vmatmul
+*.dump
+
+# Object files
+*.o
+*.a
