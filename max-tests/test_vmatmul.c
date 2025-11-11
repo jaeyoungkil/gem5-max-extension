@@ -46,18 +46,21 @@ int main() {
         printf("\n");
     }
 
-    // Initialize vector length
-    asm volatile("vsetvli zero, %0, e32, m4, ta, ma" :: "r"(16));
+    // Initialize vector length with LMUL=1
+    // With VLEN=512, VLMAX = (1 * 512) / 32 = 16 elements
+    // This fits the entire 4x4 matrix in a single register (no micro-op splitting!)
+    asm volatile("vsetvli zero, %0, e32, m1, ta, ma" :: "r"(16));
 
     // Load matrices into vector registers
-    // v1 = A, v2 = B
+    // v1 = A, v2 = B, v3 = C (result)
     asm volatile("vle32.v v1, (%0)" :: "r"(A));
     asm volatile("vle32.v v2, (%0)" :: "r"(B));
 
     // Execute matrix multiply: v3 = v1 × v2
     // vmatmul.vv v3, v1, v2
-    // Encoding: 0xB2420E57
-    asm volatile(".word 0xB2420E57");
+    // Encoding: funct6=0x2C, vm=1, vs2=2, vs1=1, funct3=0x2, vd=3, opcode=0x57
+    // Hex: 0xB220A1D7
+    asm volatile(".word 0xB220A1D7");
 
     // Store result
     asm volatile("vse32.v v3, (%0)" :: "r"(C_vector));
